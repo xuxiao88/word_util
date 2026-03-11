@@ -1,14 +1,16 @@
 package com.congyu.word.generate;
 
-import java.nio.file.Path;
+import java.io.File;
 import java.util.List;
 import java.util.Map;
 
 public interface XDocReportBaseDataBean {
 
-    Path getTemplatePath();
+    // 模板文件
+    File getTemplateFile();
 
-    String getTargetName();
+    // 目标文件
+    String getTargetPath();
 
     // 数据
     Map<String,Object> getMap();

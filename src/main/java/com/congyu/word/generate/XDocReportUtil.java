@@ -16,13 +16,15 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.congyu.word.generate.ConfigPathUtil;
+
 @Slf4j
 public class XDocReportUtil {
 
 
     public static File generateWordFile(XDocReportBaseDataBean dataBean) throws Exception {
         // 获取模版
-        InputStream ins = Files.newInputStream(dataBean.getTemplatePath());
+        InputStream ins = Files.newInputStream(dataBean.getTemplateFile().toPath());
         //注册xdocreport实例并加载FreeMarker模板引擎
         IXDocReport report = XDocReportRegistry.getRegistry().loadReport(ins,
                 TemplateEngineKind.Freemarker);
