@@ -4,8 +4,6 @@ import fr.opensagres.xdocreport.document.IXDocReport;
 import fr.opensagres.xdocreport.document.registry.XDocReportRegistry;
 import fr.opensagres.xdocreport.template.IContext;
 import fr.opensagres.xdocreport.template.TemplateEngineKind;
-import fr.opensagres.xdocreport.template.formatter.FieldsMetadata;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.poi.xwpf.usermodel.*;
 
@@ -16,13 +14,9 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.congyu.word.generate.ConfigPathUtil;
-
-@Slf4j
 public class XDocReportUtil {
 
-
-    public static File generateWordFile(XDocReportBaseDataBean dataBean) throws Exception {
+    public static File generateWordFile(XDocReportBaseData dataBean) throws Exception {
         // 获取模版
         InputStream ins = Files.newInputStream(dataBean.getTemplateFile().toPath());
         //注册xdocreport实例并加载FreeMarker模板引擎
@@ -32,97 +26,83 @@ public class XDocReportUtil {
         //创建xdocreport上下文对象
         IContext context = report.createContext();
 
-        Map<String,Object> dataMap = dataBean.getMap();
+        Map<String,Object> dataMap = dataBean.getDataMap();
         context.putMap(dataMap);
 
-        //创建字段元数据
-        FieldsMetadata fm = report.createFieldsMetadata();
-        for(Map.Entry<String,Class> keyClass : dataBean.getKeyClass().entrySet()){
-            //Word模板中的表格数据对应的集合类型
-            fm.load(keyClass.getKey(), keyClass.getValue(), true);
-        }
-
-        //输出到本地目录
-        String filePath = ConfigPathUtil.getTempPath() + File.separator + dataBean.getTargetName();
         // 处理图片
-        if (MapUtils.isNotEmpty(dataBean.getImageFields())){
-            String tempFilePath = ConfigPathUtil.getTempPath() + File.separator + "temp_"+ dataBean.getTargetName();
-            FileOutputStream out = new FileOutputStream(tempFilePath);
-            report.process(context, out);
-            File tempfile = new File(tempFilePath);
-            File file = new File(filePath);
+        if (dataBean.getImagePattern() != null && MapUtils.isNotEmpty(dataBean.getImageFields())){
+            // 使用内存流处理，不创建临时文件
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            report.process(context, baos);
 
-            replaceImagePlaceholdersInFile(
-                    tempfile,
-                    file,
-                    dataBean.getImageFields(),
-                    250,
-                    150
-            );
+            File file = new File(dataBean.getTargetPath());
+            try (ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
+                 FileOutputStream fos = new FileOutputStream(file)) {
+                
+                replaceImagePlaceholdersInStream(
+                        bais,
+                        fos,
+                        dataBean.getImagePattern(),
+                        dataBean.getImageFields()
+                );
+            }
 
             return file;
         }
 
-        FileOutputStream out = new FileOutputStream(filePath);
+        FileOutputStream out = new FileOutputStream(dataBean.getTargetPath());
         report.process(context, out);
-        return new File(filePath);
+        return new File(dataBean.getTargetPath());
     }
 
 
-    private static void replaceImagePlaceholdersInFile(
-            File inputDocx,
-            File outputDocx,
-            Map<String, byte[]> imageMap,
-            int widthPx,
-            int heightPx) throws Exception {
+    private static void replaceImagePlaceholdersInStream(
+            InputStream inputStream,
+            OutputStream outputStream,
+            Pattern imagePattern,
+            Map<String, XDocReportBaseImage> imageMap) throws Exception {
 
-        // 1. 读取输入文件
-        try (FileInputStream fis = new FileInputStream(inputDocx);
-             XWPFDocument doc = new XWPFDocument(fis)) {
+        // 1. 读取输入流
+        try (XWPFDocument doc = new XWPFDocument(inputStream)) {
 
             // 2. 执行替换
-            replaceImagePlaceholdersInDocument(doc, imageMap, widthPx, heightPx);
+            replaceImagePlaceholdersInDocument(doc, imagePattern,imageMap);
 
-            // 3. 写入输出文件
-            try (FileOutputStream fos = new FileOutputStream(outputDocx)) {
-                doc.write(fos);
-            }
+            // 3. 写入输出流
+            doc.write(outputStream);
         }
     }
 
     private static void replaceImagePlaceholdersInDocument(
             XWPFDocument doc,
-            Map<String, byte[]> imageMap,
-            int widthPx,
-            int heightPx) throws Exception {
-
-        Pattern pattern = Pattern.compile("\\{\\{image:\\d+(?:_\\d+)*\\}\\}");
+            Pattern imagePattern,
+            Map<String, XDocReportBaseImage> imageMap) throws Exception {
 
         // 替换正文段落
         for (XWPFParagraph paragraph : doc.getParagraphs()) {
-            replaceInParagraph(paragraph, pattern, imageMap, widthPx, heightPx);
+            replaceInParagraph(paragraph, imagePattern, imageMap);
         }
 
         // 替换表格（含嵌套表格）
         for (XWPFTable table : doc.getTables()) {
-            replaceInTable(table, pattern, imageMap, widthPx, heightPx);
+            replaceInTable(table, imagePattern, imageMap);
         }
     }
 
-    private static void replaceInTable(XWPFTable table, Pattern pattern, Map<String, byte[]> imageMap, int widthPx, int heightPx) throws Exception {
+    private static void replaceInTable(XWPFTable table, Pattern pattern, Map<String, XDocReportBaseImage> imageMap) throws Exception {
         for (XWPFTableRow row : table.getRows()) {
             for (XWPFTableCell cell : row.getTableCells()) {
                 for (XWPFParagraph p : cell.getParagraphs()) {
-                    replaceInParagraph(p, pattern, imageMap, widthPx, heightPx);
+                    replaceInParagraph(p, pattern, imageMap);
                 }
                 for (XWPFTable nestedTable : cell.getTables()) {
-                    replaceInTable(nestedTable, pattern, imageMap, widthPx, heightPx);
+                    replaceInTable(nestedTable, pattern, imageMap);
                 }
             }
         }
     }
 
-    private static void replaceInParagraph(XWPFParagraph paragraph, Pattern pattern, Map<String, byte[]> imageMap, int widthPx, int heightPx) throws Exception {
+    private static void replaceInParagraph(XWPFParagraph paragraph, Pattern pattern, Map<String, XDocReportBaseImage> imageMap) throws Exception {
         List<XWPFRun> runs = paragraph.getRuns();
         if (runs == null) return;
 
@@ -133,17 +113,17 @@ public class XDocReportUtil {
             if (matcher.find()) {
                 // 找到第一个匹配项（假设一个 run 只有一个占位符）
                 String fullMatch = matcher.group(0);
-                byte[] imageData = imageMap.get(fullMatch);
+                XDocReportBaseImage imageData = imageMap.get(fullMatch);
 
                 // 清空文本
                 run.setText("", 0);
                 if (imageData != null) {
                     // 插入图片
-                    int widthEmu = widthPx * 9525;
-                    int heightEmu = heightPx * 9525;
+                    int widthEmu = imageData.getWidthPx() * 9525;
+                    int heightEmu = imageData.getHeightPx() * 9525;
 
                     run.addPicture(
-                            new ByteArrayInputStream(imageData),
+                            new ByteArrayInputStream(imageData.getImageBytes()),
                             determineImageType(fullMatch),
                             sanitizeFileName(fullMatch) + ".png",
                             widthEmu,
