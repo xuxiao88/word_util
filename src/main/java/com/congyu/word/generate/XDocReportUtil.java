@@ -13,7 +13,6 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -45,7 +44,6 @@ public class XDocReportUtil {
                 replaceImagePlaceholdersInStream(
                         bais,
                         fos,
-                        dataBean.getImagePattern(),
                         imageMap
                 );
             }
@@ -62,14 +60,13 @@ public class XDocReportUtil {
     private static void replaceImagePlaceholdersInStream(
             InputStream inputStream,
             OutputStream outputStream,
-            Pattern imagePattern,
             Map<String, XDocReportBaseImage> imageMap) throws Exception {
 
         // 1. 读取输入流
         try (XWPFDocument doc = new XWPFDocument(inputStream)) {
 
             // 2. 执行替换
-            replaceImagePlaceholdersInDocument(doc, imagePattern,imageMap);
+            replaceImagePlaceholdersInDocument(doc,imageMap);
 
             // 3. 写入输出流
             doc.write(outputStream);
@@ -78,7 +75,6 @@ public class XDocReportUtil {
 
     private static void replaceImagePlaceholdersInDocument(
             XWPFDocument doc,
-            Pattern imagePattern,
             Map<String, XDocReportBaseImage> imageMap) throws Exception {
 
         // 替换正文段落
@@ -88,18 +84,18 @@ public class XDocReportUtil {
 
         // 替换表格（含嵌套表格）
         for (XWPFTable table : doc.getTables()) {
-            replaceInTable(table, imagePattern, imageMap);
+            replaceInTable(table, imageMap);
         }
     }
 
-    private static void replaceInTable(XWPFTable table, Pattern pattern, Map<String, XDocReportBaseImage> imageMap) throws Exception {
+    private static void replaceInTable(XWPFTable table, Map<String, XDocReportBaseImage> imageMap) throws Exception {
         for (XWPFTableRow row : table.getRows()) {
             for (XWPFTableCell cell : row.getTableCells()) {
                 for (XWPFParagraph p : cell.getParagraphs()) {
                     replaceInParagraph(p, imageMap);
                 }
                 for (XWPFTable nestedTable : cell.getTables()) {
-                    replaceInTable(nestedTable, pattern, imageMap);
+                    replaceInTable(nestedTable, imageMap);
                 }
             }
         }

@@ -6,7 +6,6 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Pattern;
 
 @Data
 class ExampleXDocReportData implements XDocReportBaseData {
@@ -20,8 +19,6 @@ class ExampleXDocReportData implements XDocReportBaseData {
     // 表格
     private List<TableData> tableDataList;
 
-    // 图片匹配模式
-    private  Pattern imagePattern;
     // 图片
     private List<XDocReportBaseImage> imageFields;
 

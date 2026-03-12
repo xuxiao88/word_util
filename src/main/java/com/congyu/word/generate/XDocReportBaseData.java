@@ -16,9 +16,6 @@ public interface XDocReportBaseData {
     // 数据
     Map<String,Object> getDataMap();
 
-    // 图片占位符匹配方式，比如\{\{IMAGE:\d+(?:_\d+)*\}\}
-    Pattern getImagePattern();
-
     // 图片数据
     List<XDocReportBaseImage> getImageFields();
 }
