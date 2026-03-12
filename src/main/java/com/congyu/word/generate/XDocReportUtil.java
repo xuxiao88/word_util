@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public class XDocReportUtil {
 
-    public static File generateWordFile(XDocReportBaseData dataBean) throws Exception {
+    public static ByteArrayOutputStream generateWordStream(XDocReportBaseData dataBean) throws Exception {
         // 获取模版
         InputStream ins = Files.newInputStream(dataBean.getTemplateFile().toPath());
         //注册xdocreport实例并加载FreeMarker模板引擎
@@ -37,23 +37,30 @@ public class XDocReportUtil {
             report.process(context, baos);
             Map<String,XDocReportBaseImage> imageMap = dataBean.getImageFields().stream()
                     .collect(Collectors.toMap(XDocReportBaseImage::getImageTag, v -> v));
-            File file = new File(dataBean.getTargetPath());
-            try (ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
-                 FileOutputStream fos = new FileOutputStream(file)) {
-                
+            ByteArrayOutputStream resultBaos = new ByteArrayOutputStream();
+            try (ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray())) {
                 replaceImagePlaceholdersInStream(
                         bais,
-                        fos,
+                        resultBaos,
                         imageMap
                 );
             }
 
-            return file;
+            return resultBaos;
         }
 
-        FileOutputStream out = new FileOutputStream(dataBean.getTargetPath());
-        report.process(context, out);
-        return new File(dataBean.getTargetPath());
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        report.process(context, baos);
+        return baos;
+    }
+
+    public static File generateWordFile(XDocReportBaseData dataBean) throws Exception {
+        ByteArrayOutputStream baos = generateWordStream(dataBean);
+        File file = new File(dataBean.getTargetPath());
+        try (FileOutputStream fos = new FileOutputStream(file)) {
+            baos.writeTo(fos);
+        }
+        return file;
     }
 
 
