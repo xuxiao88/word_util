@@ -6,7 +6,12 @@ public class ExampleXDocReportImage implements XDocReportBaseImage {
 
     private byte[] imageBytes;
 
+    private int imageType;
+
+    private String imageName;
+
     private int widthPx;
 
     private int heightPx;
+
 }

@@ -1,5 +1,6 @@
 import com.congyu.word.generate.XDocReportBaseImage;
 import com.congyu.word.generate.XDocReportUtil;
+import org.apache.poi.xwpf.usermodel.Document;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -19,7 +20,7 @@ public class ExampleXDocReportUtil {
 
         // 表格内容
         List<ExampleXDocReportData.TableData> tableDataList = new ArrayList<>();
-        for (int i = 0; i < 10; i++){
+        for (int i = 0; i < 3; i++){
             ExampleXDocReportData.TableData tableData = new ExampleXDocReportData.TableData();
             tableData.setCol1("col1_"+ i);
             tableData.setCol2("col2_"+ i);
@@ -45,7 +46,8 @@ public class ExampleXDocReportUtil {
             image.setImageBytes(imageBytes);
             image.setWidthPx(100);
             image.setHeightPx(100);
-
+            image.setImageType(Document.PICTURE_TYPE_PNG);
+            image.setImageName("image"+i+".png");
             imageFields.put("{{IMAGE:"+i+"}}", image);
         }
         dataBean.setImageFields(imageFields);
