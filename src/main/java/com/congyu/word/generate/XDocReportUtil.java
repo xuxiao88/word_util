@@ -5,7 +5,7 @@ import fr.opensagres.xdocreport.document.registry.XDocReportRegistry;
 import fr.opensagres.xdocreport.template.IContext;
 import fr.opensagres.xdocreport.template.TemplateEngineKind;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections4.MapUtils;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.poi.xwpf.usermodel.*;
 
 import java.io.*;
@@ -13,8 +13,8 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class XDocReportUtil {
@@ -33,11 +33,11 @@ public class XDocReportUtil {
         context.putMap(dataMap);
 
         // 处理图片
-        if (dataBean.getImagePattern() != null && MapUtils.isNotEmpty(dataBean.getImageFields())){
-            // 使用内存流处理，不创建临时文件
+        if (CollectionUtils.isNotEmpty(dataBean.getImageFields())){
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             report.process(context, baos);
-
+            Map<String,XDocReportBaseImage> imageMap = dataBean.getImageFields().stream()
+                    .collect(Collectors.toMap(XDocReportBaseImage::getImageTag, v -> v));
             File file = new File(dataBean.getTargetPath());
             try (ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
                  FileOutputStream fos = new FileOutputStream(file)) {
@@ -46,7 +46,7 @@ public class XDocReportUtil {
                         bais,
                         fos,
                         dataBean.getImagePattern(),
-                        dataBean.getImageFields()
+                        imageMap
                 );
             }
 

@@ -23,7 +23,7 @@ class ExampleXDocReportData implements XDocReportBaseData {
     // 图片匹配模式
     private  Pattern imagePattern;
     // 图片
-    private Map<String, XDocReportBaseImage> imageFields;
+    private List<XDocReportBaseImage> imageFields;
 
     @Override
     public File getTemplateFile() {

@@ -18,6 +18,26 @@ public class ExampleXDocReportUtil {
         // 循环内容
         dataBean.setList(Arrays.asList("item1", "item2"));
 
+        // 图片
+        InputStream inputStream = ExampleXDocReportUtil.class.getClassLoader().getResourceAsStream("TestImage.png");
+        if (inputStream == null) {
+            throw new RuntimeException("无法找到资源文件：TestImage");
+        }
+        byte[] imageBytes = readAllBytes(inputStream);
+        inputStream.close();
+
+        List<XDocReportBaseImage> imageFields = new ArrayList<>();
+        for (int i = 0; i < 3; i++){
+            ExampleXDocReportImage image = new ExampleXDocReportImage();
+            image.setImageBytes(imageBytes);
+            image.setWidthPx(100);
+            image.setHeightPx(100);
+            image.setImageType(Document.PICTURE_TYPE_PNG);
+            image.setImageName(String.valueOf(i));
+            imageFields.add(image);
+        }
+        dataBean.setImageFields(imageFields);
+
         // 表格内容
         List<ExampleXDocReportData.TableData> tableDataList = new ArrayList<>();
         for (int i = 0; i < 3; i++){
@@ -27,30 +47,6 @@ public class ExampleXDocReportUtil {
             tableDataList.add(tableData);
         }
         dataBean.setTableDataList(tableDataList);
-
-        // 图片
-
-
-        InputStream inputStream = ExampleXDocReportUtil.class.getClassLoader().getResourceAsStream("TestImage.png");
-        if (inputStream == null) {
-            throw new RuntimeException("无法找到资源文件：TestImage");
-        }
-        byte[] imageBytes = readAllBytes(inputStream);
-        inputStream.close();
-
-        dataBean.setImagePattern(Pattern.compile("\\{\\{IMAGE:\\d+(?:_\\d+)*\\}\\}"));
-
-        Map<String, XDocReportBaseImage> imageFields = new HashMap<>();
-        for (int i = 0; i < 3; i++){
-            ExampleXDocReportImage image = new ExampleXDocReportImage();
-            image.setImageBytes(imageBytes);
-            image.setWidthPx(100);
-            image.setHeightPx(100);
-            image.setImageType(Document.PICTURE_TYPE_PNG);
-            image.setImageName("image"+i+".png");
-            imageFields.put("{{IMAGE:"+i+"}}", image);
-        }
-        dataBean.setImageFields(imageFields);
 
         XDocReportUtil.generateWordFile(dataBean);
     }

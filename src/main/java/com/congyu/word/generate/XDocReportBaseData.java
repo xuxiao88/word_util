@@ -1,6 +1,7 @@
 package com.congyu.word.generate;
 
 import java.io.File;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
@@ -19,5 +20,5 @@ public interface XDocReportBaseData {
     Pattern getImagePattern();
 
     // 图片数据
-    Map<String,XDocReportBaseImage> getImageFields();
+    List<XDocReportBaseImage> getImageFields();
 }

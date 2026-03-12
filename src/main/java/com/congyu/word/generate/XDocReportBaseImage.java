@@ -12,4 +12,9 @@ public interface XDocReportBaseImage {
     int getWidthPx();
     // 图片高度
     int getHeightPx();
+
+    // 图片标签,用于标识图片在文档中的位置
+    default String getImageTag(){
+        return "{{IMAGE:" + this.getImageName() + "}}";
+    }
 }
