@@ -4,7 +4,8 @@
 [![Maven](https://img.shields.io/badge/Maven-3.6.0%2B-C71A36)](https://maven.apache.org/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-A lightweight Java utility library for generating Word documents using templates. Built on top of [XDocReport](https://github.com/opensagres/xdocreport) and [Apache POI](https://poi.apache.org/).
+A lightweight Java tool library for generating Word documents based on templates, implementing the scenario of batch insertion of an uncertain number of images.
+Built on top of [XDocReport](https://github.com/opensagres/xdocreport) and [Apache POI](https://poi.apache.org/).
 
 [中文文档](README.zh-CN.md)
 

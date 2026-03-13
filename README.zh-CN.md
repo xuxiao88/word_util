@@ -4,7 +4,8 @@
 [![Maven](https://img.shields.io/badge/Maven-3.6.0%2B-C71A36)](https://maven.apache.org/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-一个轻量级的 Java 工具库，用于基于模板生成 Word 文档。基于 [XDocReport](https://github.com/opensagres/xdocreport) 和 [Apache POI](https://poi.apache.org/) 构建。
+一个轻量级的 Java 工具库，用于基于模板生成 Word 文档，实现了不确定数量图片的批量插入场景。
+基于 [XDocReport](https://github.com/opensagres/xdocreport) 和 [Apache POI](https://poi.apache.org/) 构建。
 
 [English Documentation](README.md)
 
